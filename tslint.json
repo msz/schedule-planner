@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "no-extra-semi": false,
+    "max-classes-per-file": false,
+    "typedef": false
+  },
+  "extends": [
+    "./node_modules/@tallarium/lenz/dist/tslint.json"
+  ]
+}
