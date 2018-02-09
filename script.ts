@@ -142,7 +142,7 @@ function classTimesOverlap(t1: IClassTime, t2: IClassTime) {
     t1.day === t2.day &&
     (between(t1.start, t2.start, t2.end) ||
       between(t2.start, t1.start, t1.end) ||
-      (eq(t1.start, t2.start) && eq(t1.end, t2.end)))
+      (eq(t1.start, t2.start) || eq(t1.end, t2.end)))
   );
 }
 
