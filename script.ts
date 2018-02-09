@@ -53,8 +53,8 @@ function getClasses() {
   ) as IClass[];
 }
 
-function saveClasses(classes: IClass[]) {
-  localStorage.setItem(LOCALSTORAGE_CLASSES_KEY, JSON.stringify(classes));
+function saveClasses(classesToSave: IClass[]) {
+  localStorage.setItem(LOCALSTORAGE_CLASSES_KEY, JSON.stringify(classesToSave));
 }
 
 function addClassTime(className: string, classTime: IClassTime) {
@@ -146,8 +146,7 @@ function classTimesOverlap(t1: IClassTime, t2: IClassTime) {
   );
 }
 
-function composeSchedules(classes: IClass[]) {
-  console.log('composing classes:', classes);
+function composeSchedules(classesToCompose: IClass[]) {
   const queue: ISchedule[] = [
     {
       Mon: [],
@@ -161,7 +160,6 @@ function composeSchedules(classes: IClass[]) {
 
   while (queue.length > 0) {
     const schedule = queue.shift();
-    console.log('taking schedule', schedule);
     const classNames = ([] as IScheduledClass[])
       .concat(
         schedule.Mon,
@@ -171,10 +169,11 @@ function composeSchedules(classes: IClass[]) {
         schedule.Fri,
       )
       .map(x => x.name);
-    const classesToGo = classes.filter(x => classNames.indexOf(x.name) < 0);
+    const classesToGo = classesToCompose.filter(
+      x => classNames.indexOf(x.name) < 0,
+    );
     if (classesToGo.length === 0) {
       // all classes have timeslots assigned! save result
-      console.log('all classes have timeslots assigned! save result');
       completeSchedules.push(schedule);
       continue;
     }
@@ -203,7 +202,6 @@ function composeSchedules(classes: IClass[]) {
       );
     }
   }
-  console.log('returning', completeSchedules);
   return completeSchedules;
 }
 
