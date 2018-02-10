@@ -27,11 +27,13 @@ function classTimeToString(classTime: IClassTime) {
 
 interface IClass {
   name: string;
+  subclassName: string;
   times: IClassTime[];
 }
 
 interface IScheduledClass {
   name: string;
+  subclassName?: string;
   classTime: IClassTime;
 }
 
@@ -47,6 +49,10 @@ function pad(n: string, width: number) {
   return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n;
 }
 
+function getFullClassName(className: string, subclassName: string) {
+  return className + (subclassName ? ` - ${subclassName}` : '');
+}
+
 function getClasses() {
   return JSON.parse(
     localStorage.getItem(LOCALSTORAGE_CLASSES_KEY) || '[]',
@@ -57,13 +63,21 @@ function saveClasses(classesToSave: IClass[]) {
   localStorage.setItem(LOCALSTORAGE_CLASSES_KEY, JSON.stringify(classesToSave));
 }
 
-function addClassTime(className: string, classTime: IClassTime) {
-  const existing = classes.filter(x => x.name === className)[0];
+function addClassTime(
+  className: string,
+  subclassName: string,
+  classTime: IClassTime,
+) {
+  const fullClassName = getFullClassName(className, subclassName);
+  const existing = classes.filter(
+    x => getFullClassName(x.name, x.subclassName) === fullClassName,
+  )[0];
   if (existing) {
     existing.times.push(classTime);
   } else {
     classes.push({
       name: className,
+      subclassName,
       times: [classTime],
     });
   }
@@ -77,7 +91,7 @@ function renderClassList(classList: IClass[]) {
   }
   for (const cls of classList) {
     const classElement = document.createElement('li');
-    classElement.textContent = cls.name;
+    classElement.textContent = getFullClassName(cls.name, cls.subclassName);
     const timesListElement = document.createElement('ul');
     for (const classTime of cls.times) {
       const classTimeElement = document.createElement('li');
@@ -168,9 +182,9 @@ function composeSchedules(classesToCompose: IClass[]) {
         schedule.Thu,
         schedule.Fri,
       )
-      .map(x => x.name);
+      .map(x => getFullClassName(x.name, x.subclassName));
     const classesToGo = classesToCompose.filter(
-      x => classNames.indexOf(x.name) < 0,
+      x => classNames.indexOf(getFullClassName(x.name, x.subclassName)) < 0,
     );
     if (classesToGo.length === 0) {
       // all classes have timeslots assigned! save result
@@ -180,12 +194,16 @@ function composeSchedules(classesToCompose: IClass[]) {
     const nextClass = classesToGo.shift();
     const validTimeslots = nextClass.times.filter(
       time =>
-        !schedule[time.day].some(x => classTimesOverlap(x.classTime, time)),
+        !schedule[time.day].some(
+          x =>
+            nextClass.name !== x.name && classTimesOverlap(x.classTime, time),
+        ),
     );
     for (const timeslot of validTimeslots) {
       const next = JSON.parse(JSON.stringify(schedule)) as ISchedule;
       next[timeslot.day].push({
         name: nextClass.name,
+        subclassName: nextClass.subclassName,
         classTime: timeslot,
       });
       queue.push(next);
@@ -213,6 +231,10 @@ document.getElementById('save-button').addEventListener('click', () => {
     'class-name',
   ) as HTMLInputElement;
   const className = classNameElement.value;
+  const subclassNameElement = document.getElementById(
+    'subclass-name',
+  ) as HTMLInputElement;
+  const subclassName = subclassNameElement.value;
   const selectValues = [
     'day',
     'start-hour',
@@ -247,7 +269,7 @@ document.getElementById('save-button').addEventListener('click', () => {
     return;
   }
 
-  addClassTime(className, {
+  addClassTime(className, subclassName, {
     day,
     start: startTime,
     end: endTime,
@@ -285,7 +307,10 @@ document.getElementById('compute').addEventListener('click', () => {
         const scheduledClassElement = document.createElement('li');
         scheduledClassElement.textContent = `${classTimeToString(
           scheduledClass.classTime,
-        )} — ${scheduledClass.name}`;
+        )} — ${getFullClassName(
+          scheduledClass.name,
+          scheduledClass.subclassName,
+        )}`;
         scheduleElement.appendChild(scheduledClassElement);
       }
     }
