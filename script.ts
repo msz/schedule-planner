@@ -1,5 +1,3 @@
-'use strict';
-
 const LOCALSTORAGE_CLASSES_KEY = 'classes';
 
 type Day = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri';
