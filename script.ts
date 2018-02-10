@@ -25,13 +25,13 @@ function classTimeToString(classTime: IClassTime) {
 
 interface IClass {
   name: string;
-  subclassName: string;
+  subclassName?: string;
   times: IClassTime[];
 }
 
 interface IScheduledClass {
   name: string;
-  subclassName?: string;
+  subclassName: string;
   classTime: IClassTime;
 }
 
